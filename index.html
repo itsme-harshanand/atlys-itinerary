@@ -29,15 +29,19 @@ textarea{resize:vertical;min-height:70px;line-height:1.5}
 .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
 .btn-gen{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:500;cursor:pointer}
 .btn-gen:hover{background:#1d4ed8}
-.btn-shuf,.btn-copy,.btn-pdf,.btn-doc{background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px 16px;font-size:13px;cursor:pointer;color:#111;display:none;align-items:center;gap:6px;font-weight:500;transition:background 0.12s}
-.btn-shuf:hover,.btn-copy:hover,.btn-pdf:hover,.btn-doc:hover{background:#f5f4f0}
-.btn-pdf{color:#dc2626;border-color:#fca5a5}
+.btn-shuf,.btn-copy{background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px 16px;font-size:13px;cursor:pointer;color:#111;display:none;align-items:center;gap:6px;font-weight:500;transition:background 0.12s}
+.btn-shuf:hover,.btn-copy:hover{background:#f5f4f0}
+.btn-pdf,.btn-doc{border-radius:8px;padding:9px 16px;font-size:13px;cursor:pointer;font-weight:500;transition:background 0.12s;border:1px solid}
+.btn-pdf{color:#dc2626;border-color:#fca5a5;background:#fff}
 .btn-pdf:hover{background:#fef2f2}
-.btn-doc{color:#1d4ed8;border-color:#93c5fd}
+.btn-doc{color:#1d4ed8;border-color:#93c5fd;background:#fff}
 .btn-doc:hover{background:#eff6ff}
 .output{display:none;margin-top:2rem}
 .style-badge{display:inline-block;font-size:10px;color:#ccc;margin-top:12px;letter-spacing:0.3px}
 .dl-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid #eee}
+.grp-btn{background:#fff;border:1.5px solid #ddd;border-radius:20px;padding:7px 16px;font-size:13px;cursor:pointer;color:#555;font-weight:500;transition:all 0.15s}
+.grp-btn:hover{border-color:#2563eb;color:#2563eb}
+.grp-btn.active{background:#eff6ff;border-color:#2563eb;color:#1d4ed8;font-weight:600}
 @media(max-width:580px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -56,6 +60,15 @@ textarea{resize:vertical;min-height:70px;line-height:1.5}
         <label>Traveller name(s)</label>
         <div id="tlist"><div class="trow"><input type="text" placeholder="e.g. Priya Sharma" id="t0"/></div></div>
         <button class="add-btn" onclick="addT()">+ Add traveller</button>
+      </div>
+      <div class="field" id="group-type-field" style="grid-column:1/-1;display:none">
+        <label>Type of group</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px" id="group-btns">
+          <button type="button" class="grp-btn active" data-val="friends" onclick="selectGroup(this)">👯 Friends</button>
+          <button type="button" class="grp-btn" data-val="family" onclick="selectGroup(this)">👨‍👩‍👧 Family</button>
+          <button type="button" class="grp-btn" data-val="couple" onclick="selectGroup(this)">💑 Couple</button>
+          <button type="button" class="grp-btn" data-val="colleagues" onclick="selectGroup(this)">💼 Colleagues</button>
+        </div>
       </div>
       <div class="field"><label>Country</label>
         <select id="cy"><option value="AU">Australia</option><option value="NZ">New Zealand</option></select>
@@ -113,11 +126,28 @@ function toggleInviter(){
   btn.textContent=visible?'+ Add inviter or host in the destination':'− Remove inviter';
 }
 
+function selectGroup(btn){
+  document.querySelectorAll('.grp-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function getGroupType(){
+  const active=document.querySelector('.grp-btn.active');
+  return active?active.dataset.val:'friends';
+}
+
 function addT(){
   const l=document.getElementById('tlist');
   const d=document.createElement('div');d.className='trow';
-  d.innerHTML='<input type="text" placeholder="e.g. Rahul Mehta" id="t'+tc+'"/><button class="rm-btn" onclick="this.parentElement.remove()">&#215;</button>';
-  l.appendChild(d);document.getElementById('t'+(tc++)).focus();
+  d.innerHTML='<input type="text" placeholder="e.g. Rahul Mehta" id="t'+tc+'"/><button class="rm-btn" onclick="this.parentElement.remove();checkGroupField()">&#215;</button>';
+  l.appendChild(d);
+  document.getElementById('t'+(tc++)).focus();
+  checkGroupField();
+}
+
+function checkGroupField(){
+  const count=document.querySelectorAll('#tlist input').length;
+  document.getElementById('group-type-field').style.display=count>1?'block':'none';
 }
 function gnames(){return Array.from(document.querySelectorAll('#tlist input')).map(i=>i.value.trim()).filter(Boolean);}
 function fd(s){return s?new Date(s+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):''}
@@ -164,17 +194,32 @@ function inviterDay(inv, dayLoc, dayIdx, totalDays){
   return warmPhrases[dayIdx%warmPhrases.length]+(inv.note?` ${inv.note.charAt(0).toUpperCase()+inv.note.slice(1)}.`:'');
 }
 
-function openingStatement(nm, flag, plural, inv, nights){
-  const first=nm.split(' ')[0];
+function openingStatement(nm, flag, plural, inv, nights, grp){
   const country=flag;
-  const invNote=inv?` Our ${inv.rel} ${inv.name} has been living in ${inv.city} for a while now, and part of this trip is finally being able to spend real time with them — not just a call, but actually being in the same place.`:'';
+  const invNote=inv?` ${grp==='couple'?'My partner and I have a':'We also have a'} dear ${inv.rel}, ${inv.name}, who has been living in ${inv.city} for a while now — being able to finally spend real time with them is a big part of why this trip feels so meaningful.`:'';
+
+  const grpContext={
+    solo:`I have always believed that there is something uniquely clarifying about travelling alone — making every decision yourself, moving at your own pace, being fully present in a place without distraction.`,
+    friends:`The four of us have been talking about doing something like this together for years. Life has a way of getting in the way, but this time we actually made it happen, and that in itself feels like something worth celebrating.`,
+    family:`This trip is something we have been wanting to do as a family for a long time. Sharing a place this extraordinary with the people closest to you is a different kind of experience entirely, and we are all genuinely looking forward to it.`,
+    couple:`We have been planning this trip together for a while now, and it feels like the right time. Travelling as a couple to a place you have both dreamed about has a particular kind of meaning that is hard to explain but easy to feel.`,
+    colleagues:`We have worked together for a long time and this trip is both a chance to explore a remarkable part of the world and to spend time together outside of work — something we have wanted to do for a while.`
+  };
+
+  const grpLine=grpContext[grp]||grpContext.friends;
+
   const pool=[
-    `${plural?'We have':'I have'} been dreaming about visiting ${country} for as long as ${plural?'we':'I'} can remember. It feels like one of those places that has always been in the back of ${plural?'our':'my'} mind — the landscapes, the culture, the sheer scale of it. This felt like the right moment to finally stop putting it off and actually go.${invNote}`,
-    `There is something about ${country} that ${plural?'we have':'I have'} always been drawn to, even before ${plural?'we':'I'} fully understood why. ${plural?'We':'I'} have talked about this trip for years — with family, with friends, in passing conversations that always ended with "one day." This ${plural?'is our':'is my'} one day.${invNote}`,
-    `This trip to ${country} is something ${plural?'we have':'I have'} been quietly planning in ${plural?'our':'my'} head for a very long time. ${nights} nights feels like just enough time to actually breathe, to explore, and to experience a place ${plural?'we have':'I have'} only ever seen on screens. ${plural?'We are':'I am'} genuinely excited in a way that is hard to put into words.${invNote}`,
-    `${plural?'We have':'I have'} always believed that travel changes the way you see the world, and ${country} is a place ${plural?'we have':'I have'} long felt ${plural?'we':'I'} needed to experience firsthand. After a great deal of thought and planning, this trip represents something ${plural?'we':'I'} have genuinely been looking forward to — not just as a holiday, but as a personal milestone.${invNote}`,
-    `${country} has been on ${plural?'our':'my'} list for years — not in a vague, someday sort of way, but in the specific way where ${plural?'you have':'you have'} already imagined what certain mornings would feel like. This is ${plural?'us':'me'} finally doing it, and ${plural?'we are':'I am'} arriving with a lot of feeling and a very clear plan.${invNote}`,
+    `${plural?'We have':'I have'} been dreaming about visiting ${country} for as long as ${plural?'we':'I'} can remember. It feels like one of those places that has always been in the back of ${plural?'our':'my'} mind — the landscapes, the culture, the sheer scale of it. ${grpLine} This felt like the right moment to finally stop putting it off and actually go.${invNote}`,
+
+    `There is something about ${country} that ${plural?'we have':'I have'} always been drawn to, even before ${plural?'we':'I'} fully understood why. ${plural?'We':'I'} have talked about this trip for years — with family, with friends, in passing conversations that always ended with "one day." ${grpLine} This ${plural?'is our':'is my'} one day.${invNote}`,
+
+    `This trip to ${country} is something ${plural?'we have':'I have'} been quietly planning in ${plural?'our':'my'} head for a very long time. ${nights} nights feels like just enough time to actually breathe, to explore, and to experience a place ${plural?'we have':'I have'} only ever seen on screens. ${grpLine} ${plural?'We are':'I am'} genuinely excited in a way that is hard to put into words.${invNote}`,
+
+    `${plural?'We have':'I have'} always believed that travel changes the way you see the world, and ${country} is a place ${plural?'we have':'I have'} long felt ${plural?'we':'I'} needed to experience firsthand. ${grpLine} After a great deal of thought and planning, this trip represents something ${plural?'we':'I'} have genuinely been looking forward to — not just as a holiday, but as a personal milestone.${invNote}`,
+
+    `${country} has been on ${plural?'our':'my'} list for years — not in a vague, someday sort of way, but in the specific way where you have already imagined what certain mornings would feel like. ${grpLine} This is ${plural?'us':'me'} finally doing it, and ${plural?'we are':'I am'} arriving with a lot of feeling and a very clear plan.${invNote}`,
   ];
+
   const idx=Math.floor(Math.random()*pool.length);
   return pool[idx];
 }
@@ -603,7 +648,8 @@ function gen(){
   const n=nts(s,e);
   const c=document.getElementById('cy').value;
   const inv=getInviter();
-  meta={ns,s,e,n,c,inv};
+  const grp=ns.length>1?getGroupType():'solo';
+  meta={ns,s,e,n,c,inv,grp};
   combos=buildCombos(c,n);
   ci=0;
   render();
@@ -621,13 +667,13 @@ function shuf(){
 }
 
 function render(){
-  const {ns,s,e,n,c,inv}=meta;
+  const {ns,s,e,n,c,inv,grp}=meta;
   const {route,style,days,detail,tip,airports}=combos[ci];
   const plural=ns.length>1;
   const nm=ns.length===1?ns[0]:ns.slice(0,-1).join(', ')+' & '+ns[ns.length-1];
   const flag=c==='AU'?'Australia':'New Zealand';
   const dates=`${fd(s)} → ${fd(e)}`;
-  const opening=openingStatement(nm,flag,plural,inv,n);
+  const opening=openingStatement(nm,flag,plural,inv,n,grp||'solo');
 
   let html='';
   if(style.isTabular){
@@ -650,13 +696,13 @@ function render(){
 }
 
 function buildPlainText(){
-  const {ns,s,e,n,c,inv}=meta;
+  const {ns,s,e,n,c,inv,grp}=meta;
   const {route,days,detail,tip,airports}=combos[ci];
   const plural=ns.length>1;
   const nm=ns.length===1?ns[0]:ns.slice(0,-1).join(', ')+' & '+ns[ns.length-1];
   const flag=c==='AU'?'Australia':'New Zealand';
   const apts=airports||[];
-  const opening=openingStatement(nm,flag,plural,inv,n);
+  const opening=openingStatement(nm,flag,plural,inv,n,grp||'solo');
   let t=`${flag} Itinerary\nFor: ${nm}\n${fd(s)} to ${fd(e)} (${n} nights)\nRoute: ${route.cities.join(' > ')}\n`;
   if(apts.length) t+=`Arriving: ${apts[0]} | Departing: ${apts[apts.length-1]}\n`;
   if(inv) t+=`\nHosted by: ${inv.name} (${inv.rel}) in ${inv.city}${inv.note?' — '+inv.note:''}\n`;
@@ -688,13 +734,13 @@ function cp(){
 function dlPDF(){
   const btn=document.getElementById('btn-pdf');
   btn.textContent='Opening...';
-  const {ns,s,e,n,c,inv}=meta;
+  const {ns,s,e,n,c,inv,grp}=meta;
   const {route,days,detail,airports}=combos[ci];
   const plural=ns.length>1;
   const nm=ns.length===1?ns[0]:ns.slice(0,-1).join(', ')+' & '+ns[ns.length-1];
   const flag=c==='AU'?'Australia':'New Zealand';
   const apts=airports||[];
-  const opening=openingStatement(nm,flag,plural,inv,n);
+  const opening=openingStatement(nm,flag,plural,inv,n,grp||'solo');
 
   let body=``;
   days.forEach((d,i)=>{
@@ -760,13 +806,13 @@ function dlPDF(){
 function dlDOC(){
   const btn=document.getElementById('btn-doc');
   btn.textContent='Generating...';
-  const {ns,s,e,n,c,inv}=meta;
+  const {ns,s,e,n,c,inv,grp}=meta;
   const {route,days,detail,airports}=combos[ci];
   const plural=ns.length>1;
   const nm=ns.length===1?ns[0]:ns.slice(0,-1).join(', ')+' & '+ns[ns.length-1];
   const flag=c==='AU'?'Australia':'New Zealand';
   const apts=airports||[];
-  const opening=openingStatement(nm,flag,plural,inv,n);
+  const opening=openingStatement(nm,flag,plural,inv,n,grp||'solo');
 
   let rows='';
   days.forEach((d,i)=>{
