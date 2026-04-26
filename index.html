@@ -190,30 +190,37 @@ function inviterCard(inv){
   </div>`;
 }
 
-function inviterDay(inv, dayLoc, dayIdx, totalDays){
+function inviterDay(inv, dayLoc, dayIdx, totalDays, plural){
   if(!inv) return null;
   const city=inv.city.toLowerCase();
   const loc=dayLoc.toLowerCase();
   if(!loc.includes(city)&&!city.includes(loc)) return null;
-  const warmPhrases=[
+  const warmPhrases=plural?[
     `This is the day I've genuinely been looking forward to the most — we're finally going to see ${inv.name}. After all the planning, all the messages, it's going to feel surreal to actually be in the same city. ${inv.name} knows ${inv.city} better than any guidebook, so we're trusting them completely with the day.`,
     `I keep thinking about this day. ${inv.name} has been asking when we're coming for what feels like forever, and today's the answer. We've decided to just hand over the reins — they're going to show us the ${inv.city} that tourists never find, and honestly that sounds perfect.`,
     `Seeing ${inv.name} today is the kind of thing that makes the whole trip feel real. We didn't just plan a holiday — we planned to actually be with someone we care about, in a place they call home. I want to soak up every bit of it.`,
     `There's something really special about having someone who actually lives in ${inv.city} waiting for you. ${inv.name} knows where the locals eat, which views are worth it, and which tourist traps to skip entirely. Today we get to benefit from all of that.`
+  ]:[
+    `This is the day I've been looking forward to the most — I'm finally going to see ${inv.name}. After all the messages and planning from afar, it's going to feel surreal to actually be in the same city as them.`,
+    `I keep thinking about seeing ${inv.name} today. They've been asking when I'm coming for what feels like forever, and today's finally the answer. I'm just going to let them take the lead — they know ${inv.city} better than I ever could from the outside.`,
+    `Seeing ${inv.name} today is what makes this whole trip feel real and personal. I didn't just plan a holiday — I planned to be with someone I genuinely care about, in a place they call home.`,
+    `There's something deeply comforting about knowing ${inv.name} is in ${inv.city} waiting. They know exactly where to eat, what's worth seeing, and what to skip. Today I get to just follow their lead and enjoy it.`
   ];
   return warmPhrases[dayIdx%warmPhrases.length]+(inv.note?` ${inv.note.charAt(0).toUpperCase()+inv.note.slice(1)}.`:'');
 }
 
-function openingStatement(nm, flag, plural, inv, nights, grp){
+function openingStatement(nm, flag, plural, inv, nights, grp, travCount){
   const country=flag;
-  const invNote=inv?` ${grp==='couple'?'My partner and I have a':'We also have a'} dear ${inv.rel}, ${inv.name}, who has been living in ${inv.city} for a while now — being able to finally spend real time with them is a big part of why this trip feels so meaningful.`:'';
+  const invNote=inv?` ${grp==='couple'?'My partner and I have a':plural?'We also have a':'I also have a'} dear ${inv.rel}, ${inv.name}, who has been living in ${inv.city} for a while now — being able to finally spend real time with them is a big part of why this trip feels so meaningful.`:'';
+
+  const grpSize=travCount>1?`The ${travCount===2?'two':travCount===3?'three':travCount===4?'four':travCount===5?'five':'group of '+travCount} of us`:'I';
 
   const grpContext={
     solo:`I have always believed that there is something uniquely clarifying about travelling alone — making every decision yourself, moving at your own pace, being fully present in a place without distraction.`,
-    friends:`The four of us have been talking about doing something like this together for years. Life has a way of getting in the way, but this time we actually made it happen, and that in itself feels like something worth celebrating.`,
+    friends:`${grpSize} have been talking about doing something like this together for years. Life has a way of getting in the way, but this time we actually made it happen, and that in itself feels like something worth celebrating.`,
     family:`This trip is something we have been wanting to do as a family for a long time. Sharing a place this extraordinary with the people closest to you is a different kind of experience entirely, and we are all genuinely looking forward to it.`,
     couple:`We have been planning this trip together for a while now, and it feels like the right time. Travelling as a couple to a place you have both dreamed about has a particular kind of meaning that is hard to explain but easy to feel.`,
-    colleagues:`We have worked together for a long time and this trip is both a chance to explore a remarkable part of the world and to spend time together outside of work — something we have wanted to do for a while.`
+    colleagues:`${grpSize} have worked together for a long time and this trip is both a chance to explore a remarkable part of the world and to spend time together outside of work — something we have wanted to do for a while.`
   };
 
   const grpLine=grpContext[grp]||grpContext.friends;
@@ -243,9 +250,51 @@ function openingCard(statement){
 
 function personalize(text,nm,plural){
   if(plural){
-    return text.replace(/\bI will\b/g,"We will").replace(/\bI'm\b/g,"We're").replace(/\bI've\b/g,"We've")
-      .replace(/\bI had\b/g,"We had").replace(/\bmy\b/g,"our").replace(/\bme\b/g,"us")
-      .replace(/\bI \b/g,"We ").replace(/\bI$/g,"We");
+    return text
+      .replace(/\bI will\b/g,"We will")
+      .replace(/\bI'm\b/g,"We're")
+      .replace(/\bI've\b/g,"We've")
+      .replace(/\bI'd\b/g,"We'd")
+      .replace(/\bI'll\b/g,"We'll")
+      .replace(/\bI had\b/g,"We had")
+      .replace(/\bI am\b/g,"We are")
+      .replace(/\bI was\b/g,"We were")
+      .replace(/\bI can\b/g,"We can")
+      .replace(/\bI want\b/g,"We want")
+      .replace(/\bI need\b/g,"We need")
+      .replace(/\bI know\b/g,"We know")
+      .replace(/\bI feel\b/g,"We feel")
+      .replace(/\bI think\b/g,"We think")
+      .replace(/\bI find\b/g,"We find")
+      .replace(/\bI love\b/g,"We love")
+      .replace(/\bI plan\b/g,"We plan")
+      .replace(/\bI read\b/g,"We read")
+      .replace(/\bI only\b/g,"We only")
+      .replace(/\bI also\b/g,"We also")
+      .replace(/\bI just\b/g,"We just")
+      .replace(/\bI specifically\b/g,"We specifically")
+      .replace(/\bI intend\b/g,"We intend")
+      .replace(/\bI expect\b/g,"We expect")
+      .replace(/\bI booked\b/g,"We booked")
+      .replace(/\bI pre-booked\b/g,"We pre-booked")
+      .replace(/\bI hired\b/g,"We hired")
+      .replace(/\bI downloaded\b/g,"We downloaded")
+      .replace(/\bmy phone\b/g,"our phones")
+      .replace(/\bmy plan\b/g,"our plan")
+      .replace(/\bmy phone\b/g,"our phones")
+      .replace(/\bmy list\b/g,"our list")
+      .replace(/\bmy Maps\b/g,"our Maps")
+      .replace(/\bmy head\b/g,"our heads")
+      .replace(/\bmy mind\b/g,"our minds")
+      .replace(/\bmy whole\b/g,"our whole")
+      .replace(/\bmy first\b/g,"our first")
+      .replace(/\bmy ideal\b/g,"our ideal")
+      .replace(/\bmyself\b/g,"ourselves")
+      .replace(/\bme \b/g,"us ")
+      .replace(/\bme\./g,"us.")
+      .replace(/\bme,/g,"us,")
+      .replace(/\bI \b/g,"We ")
+      .replace(/\bI$/g,"We");
   }
   return text;
 }
@@ -368,7 +417,7 @@ const STYLES = [
       const rows=days.map((d,i)=>{
         const rawActs=detail?d.detail:d.brief;
         let acts=rawActs.map(a=>personalizeFn(a,firstName,plural));
-        const iDay=inviterDayFn(inv,d.loc,i,days.length);
+        const iDay=inviterDayFn(inv,d.loc,i,days.length,plural);
         if(iDay) acts=[iDay,...acts.slice(0,1)];
         const actStr=acts.slice(0,2).map((a,ai)=>`<div style="margin-bottom:6px;display:flex;gap:7px;align-items:flex-start"><span style="color:${ai===0&&iDay?'#7e22ce':'#2563eb'};font-size:11px;flex-shrink:0;margin-top:2px">${ai===0&&iDay?'★':'&#9654;'}</span><span style="font-style:${ai===0&&iDay?'italic':'normal'};color:${ai===0&&iDay?'#581c87':'#444'}">${a}</span></div>`).join('');
         const aptFrom=airports[i]||'';
@@ -685,7 +734,7 @@ function render(){
   const nm=ns.length===1?ns[0]:ns.slice(0,-1).join(', ')+' & '+ns[ns.length-1];
   const flag=c==='AU'?'Australia':'New Zealand';
   const dates=`${fd(s)} → ${fd(e)}`;
-  const opening=openingStatement(nm,flag,plural,inv,n,grp||'solo');
+  const opening=openingStatement(nm,flag,plural,inv,n,grp||'solo',ns.length);
 
   let html='';
   if(style.isTabular){
@@ -697,7 +746,7 @@ function render(){
     days.forEach((d,i)=>{
       const rawActs=detail?d.detail:d.brief;
       let acts=rawActs.map(a=>personalize(a,ns[0],plural));
-      const iDay=inviterDay(inv,d.loc,i,days.length);
+      const iDay=inviterDay(inv,d.loc,i,days.length,plural);
       if(iDay) acts=[iDay,...acts.slice(0,2)];
       html+=style.dayCard(i,d.loc,fwd(s,i),acts);
     });
@@ -714,7 +763,7 @@ function buildPlainText(){
   const nm=ns.length===1?ns[0]:ns.slice(0,-1).join(', ')+' & '+ns[ns.length-1];
   const flag=c==='AU'?'Australia':'New Zealand';
   const apts=airports||[];
-  const opening=openingStatement(nm,flag,plural,inv,n,grp||'solo');
+  const opening=openingStatement(nm,flag,plural,inv,n,grp||'solo',ns.length);
   let t=`${flag} Itinerary\nFor: ${nm}\n${fd(s)} to ${fd(e)} (${n} nights)\nRoute: ${route.cities.join(' > ')}\n`;
   if(apts.length) t+=`Arriving: ${apts[0]} | Departing: ${apts[apts.length-1]}\n`;
   if(inv) t+=`\nHosted by: ${inv.name} (${inv.rel}) in ${inv.city}${inv.note?' — '+inv.note:''}\n`;
@@ -725,7 +774,7 @@ function buildPlainText(){
     const aptTo=apts[i+1]||'';
     if(aptFrom&&aptTo&&aptFrom!==aptTo) t+=` | Flight: ${aptFrom} → ${aptTo}`;
     t+='\n';
-    const iDay=inviterDay(inv,d.loc,i,days.length);
+    const iDay=inviterDay(inv,d.loc,i,days.length,plural);
     if(iDay) t+=`  ★ ${iDay}\n`;
     const acts=detail?d.detail:d.brief;
     acts.slice(0,iDay?2:4).forEach(a=>t+=`  • ${personalize(a,ns[0],plural)}\n`);
@@ -754,7 +803,7 @@ function dlPDF(){
   const nm=ns.length===1?ns[0]:ns.slice(0,-1).join(', ')+' & '+ns[ns.length-1];
   const flag=c==='AU'?'Australia':'New Zealand';
   const apts=airports||[];
-  const opening=openingStatement(nm,flag,plural,inv,n,grp||'solo');
+  const opening=openingStatement(nm,flag,plural,inv,n,grp||'solo',ns.length);
 
   let body=``;
   days.forEach((d,i)=>{
@@ -762,7 +811,7 @@ function dlPDF(){
     const flightStr=(aptF&&aptT&&aptF!==aptT)?`<div class="flight">✈ ${aptF} → ${aptT}</div>`:
       (i===0&&aptF?`<div class="flight arrive">Arrive: ${aptF}</div>`:
       (i===days.length-1&&aptT?`<div class="flight depart">Depart: ${aptT}</div>`:''));
-    const iDay=inviterDay(inv,d.loc,i,days.length);
+    const iDay=inviterDay(inv,d.loc,i,days.length,plural);
     const acts=(detail?d.detail:d.brief).slice(0,iDay?2:4).map(a=>personalize(a,ns[0],plural));
     const bullets=acts.map(a=>`<li>${a}</li>`).join('');
     const invHtml=iDay?`<div class="inv-note">★ ${iDay}</div>`:'';
@@ -827,7 +876,7 @@ function dlDOC(){
   const nm=ns.length===1?ns[0]:ns.slice(0,-1).join(', ')+' & '+ns[ns.length-1];
   const flag=c==='AU'?'Australia':'New Zealand';
   const apts=airports||[];
-  const opening=openingStatement(nm,flag,plural,inv,n,grp||'solo');
+  const opening=openingStatement(nm,flag,plural,inv,n,grp||'solo',ns.length);
 
   let rows='';
   days.forEach((d,i)=>{
@@ -835,7 +884,7 @@ function dlDOC(){
     const flight=(aptF&&aptT&&aptF!==aptT)?`<p style="color:#1d4ed8;font-size:9pt;margin:2pt 0">&#9992; ${aptF} &rarr; ${aptT}</p>`:
       (i===0&&aptF?`<p style="color:#059669;font-size:9pt;margin:2pt 0">Arrive: ${aptF}</p>`:
       (i===days.length-1&&aptT?`<p style="color:#dc2626;font-size:9pt;margin:2pt 0">Depart: ${aptT}</p>`:''));
-    const iDay=inviterDay(inv,d.loc,i,days.length);
+    const iDay=inviterDay(inv,d.loc,i,days.length,plural);
     const acts=(detail?d.detail:d.brief).slice(0,iDay?2:4).map(a=>personalize(a,ns[0],plural));
     const bullets=acts.map(a=>`<li style="font-size:9pt;color:#333;margin-bottom:3pt">${a}</li>`).join('');
     const invHtml=iDay?`<p style="color:#7e22ce;font-style:italic;font-size:9pt;margin:4pt 0">&#9733; ${iDay}</p>`:'';
